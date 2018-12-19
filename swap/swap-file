@@ -3,8 +3,8 @@
 
 VERS="0.1"
 SWAP_FILE="/hiveswapfile"
-SWAP_SIZE_TARGET=${1:-8192}
-MEMORY_SIZE_TARGET=${2:-16384}
+SWAP_SIZE_TARGET=${2:-8192}
+MEMORY_SIZE_TARGET=${3:-16384}
 
 function fstabRemoveEntry(){
 	sudo sed -i.bak "\@^/hiveswapfile@d" /etc/fstab
@@ -34,7 +34,6 @@ function MemInfo(){
     echo -e "Disk free space: ${GREEN}$FREE_SPACE${NOCOLOR} Mb"
     echo
 }
-
 
 function CreateSwapFile(){
     MemInfo
@@ -113,9 +112,33 @@ function RemoveSwapFile(){
 	return 0
 }
 
+function Help(){
+        echo -e "${YELLOW}create [Swap_Size_Mb] [[Total_Size_Mb]] ${NOCOLOR}- create swap in file (default size 8192Mb or/and 16384 Mb in total)"
+        echo -e "${YELLOW}remove${NOCOLOR} - remove swap file"
+        echo -e "${YELLOW}info${NOCOLOR} - memory info"
+        echo -e "${YELLOW}help${NOCOLOR} - this info"
+}
+
 ######################################################################
 
 echo -e "${CYAN}Hive Swap File Helper v${VERS}${NOCOLOR}"
 
+case "$1" in
+	create)
+		CreateSwapFile
+		;;
+	remove)
+		RemoveSwapFile
+		;;
+	info)
+                MemInfo
+                ;;
+        help)
+                Help
+                ;;
+        *)
+                Help
+		;;
+esac
 
 exit 0
