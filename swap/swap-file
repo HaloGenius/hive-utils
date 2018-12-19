@@ -5,6 +5,7 @@ VERS="0.1"
 SWAP_FILE="/hiveswapfile"
 SWAP_SIZE_TARGET=${2:-8192}
 MEMORY_SIZE_TARGET=${3:-16384}
+DELAY=5
 
 function fstabRemoveEntry(){
 	sudo sed -i.bak "\@^/hiveswapfile@d" /etc/fstab
@@ -57,10 +58,12 @@ function CreateSwapFile(){
 	exit 2
     fi
 
-    echo -e "Target swap size is ${GREEN}$SWAP_SIZE${NOCOLOR} Mb"
-
+    echo -e "Going to create swap file ${GREEN}$SWAP_SIZE${NOCOLOR} Mb"
+	echo -e "${YELLOW}Press Ctrl+C to break or wait $DELAY seconds to starting process${NOCOLOR}"
+	read -t $DELAY
+	
     if [ $((SWAP_SIZE+1024)) -gt $FREE_SPACE ]; then
-	echo -e "No space on disk for swap file - try ${PURPLE}disk-expand${NOCOLOR} first"
+	echo -e "No space on disk for swap file - try ${PURPLE}disk-expand${NOCOLOR} first or change swap size in arguments"
 	exit 3
     fi
 
@@ -82,7 +85,7 @@ function CreateSwapFile(){
     MemInfo
 
     if [ $SWAP_SIZE -gt 0 ]; then
-    	echo -e "${GREEN}Swap file ${YELLOW}${SWAP_FILE}${GREEN} with size ${YELLOW}${SWAP_SIZE}${GREEN} Mb ACTIVATED!${NOCOLOR}"
+    	echo -e "Swap file ${YELLOW}${SWAP_FILE}${NOCOLOR} with size ${YELLOW}${SWAP_SIZE}${NOCOLOR} Mb ${GREEN}ACTIVATED!${NOCOLOR}"
     	[[ $(fstabAddEntry) ]] && echo -e "${RED}Failed to add entry to /etc/fstab${NOCOLOR}"
     else
     	echo -e "${RED}Something was wrong! Please report to bee@haveos.farm ${NOCOLOR}"
@@ -93,22 +96,26 @@ function CreateSwapFile(){
 function RemoveSwapFile(){
     SWAP_SIZE=`free -m | grep "Swap" | awk '{ print $2 }'`
     if [ $SWAP_SIZE -eq 0 ];then
-	echo -e "${YELLOW}Swap is not active. Nothing to do${NOCOLOR}"
-	exit 1
+		echo -e "${YELLOW}Swap is not active. There is nothing to do!${NOCOLOR}"
+		exit 1
     fi
-    echo "Swap file removing:"
-    sudo swapoff $SWAP_FILE && sudo rm $SWAP_FILE && echo -e "  deactivating and removing swap file"
+    
+    echo -e "${YELLOW}Swap file removing:${NOCOLOR}"
+    echo -n "- deactivating and removing swap file "
+    sudo swapoff $SWAP_FILE && sudo rm $SWAP_FILE && echo -e "${GREEN}OK${NOCOLOR}"
     if [ $? -ne 0 ];then
-	echo -e "${RED}  FAILED${NOCOLOR}"
-	exit 1
+		echo -e "${RED}FAIL${NOCOLOR}"
+		exit 1
     fi
+    echo -n "- removing swap entry from /etc/fstab "
     if [ $(fstabRemoveEntry) ]; then
-	echo -e "  removing entry from /etc/fstab"
+    	echo -e "${RED}FAIL${NOCOLOR}"
+    	exit 1
+	
     else
-	echo -e "${RED}  FAILED${NOCOLOR}"
-	exit 1
+		echo -e "${GREEN}OK${NOCOLOR}"
     fi
-    echo -e "${GREEN}Completed${NOCOLOR}"
+    echo -e "${GREEN}Completed!${NOCOLOR}"
 	return 0
 }
 
