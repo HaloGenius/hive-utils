@@ -84,7 +84,7 @@ function CreateSwapFile(){
 
     if [ $SWAP_SIZE -gt 0 ]; then
     	echo -e "${GREEN}Swap file ${YELLOW}${SWAP_FILE}${GREEN} with size ${YELLOW}${SWAP_SIZE}${GREEN} Mb ACTIVATED!${NOCOLOR}"
-    	[[ $(fstabAddEntry) ]] echo -e "${RED}Failed to add entry to /etc/fstab${NOCOLOR}"
+    	[[ $(fstabAddEntry) ]] && echo -e "${RED}Failed to add entry to /etc/fstab${NOCOLOR}"
     else
     	echo -e "${RED}Something was wrong! Please report to bee@haveos.farm ${NOCOLOR}"
     	exit 11
